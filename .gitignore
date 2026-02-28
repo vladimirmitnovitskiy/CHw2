@@ -1,0 +1,59 @@
+# Библиотеки
+*.a
+*.so
+*.dll
+
+# Файлы резервных копий
+*~
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.swp
+
+# Если используешь make
+Makefile~
+
+# Кэш и служебные файлы редакторов
+.vscode/
+.idea/
+
+# --- Сборка и бинарники ---
+# Игнорируем папку сборки целиком (самое важное!)
+build/
+build_*/
+bin/
+lib/
+
+# Скомпилированные объектные файлы
+*.o
+*.obj
+
+# Исполняемые файлы (на случай ручной компиляции gcc)
+*.exe
+*.out
+*.app
+
+# --- CMake (мусор, если случайно запустили cmake не в папке build) ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+
+# --- IDE и Редакторы ---
+# Visual Studio Code
+.vscode/
+
+# CLion / IntelliJ
+.idea/
+cmake-build-*/
+
+# Vim / Nano (временные файлы)
+*.swp
+*~
+*.swo
+
+# --- Операционные системы ---
+.DS_Store
+Thumbs.db
