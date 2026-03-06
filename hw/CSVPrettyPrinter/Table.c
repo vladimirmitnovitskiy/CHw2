@@ -1,21 +1,18 @@
+#include "Table.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Table.h"
 
-typedef struct Cell
-{
+typedef struct Cell {
     char* text;
 } Cell;
 
-typedef struct Row
-{
+typedef struct Row {
     Cell* cells;
     int count;
 } Row;
 
-struct Table
-{
+struct Table {
     Row* rows;
     int rowsCount;
     int colsCount;
@@ -57,8 +54,7 @@ void addCell(Table* table, int row, const char* text)
     c->text = malloc(strlen(text) + 1);
     strcpy(c->text, text);
 
-    if (row == 0)
-    {
+    if (row == 0) {
         table->widths = realloc(table->widths, (r->count + 1) * sizeof(int));
         table->widths[r->count] = 0;
         table->colsCount++;
@@ -66,8 +62,7 @@ void addCell(Table* table, int row, const char* text)
 
     int len = strlen(text);
 
-    if (len > table->widths[r->count])
-    {
+    if (len > table->widths[r->count]) {
         table->widths[r->count] = len;
     }
 
@@ -96,10 +91,8 @@ int* tablesWidths(Table* table)
 
 void freeTable(Table* table)
 {
-    for (int i = 0; i < table->rowsCount; i++)
-    {
-        for (int j = 0; j < table->rows[i].count; j++)
-        {
+    for (int i = 0; i < table->rowsCount; i++) {
+        for (int j = 0; j < table->rows[i].count; j++) {
             free(table->rows[i].cells[j].text);
         }
 
