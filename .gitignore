@@ -57,3 +57,5 @@ cmake-build-*/
 # --- Операционные системы ---
 .DS_Store
 Thumbs.db
+
+.vscode-ctags
