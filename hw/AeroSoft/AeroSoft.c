@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
             char* code = cmdLine + 5;
             char foundName[MAX_LINE_LEN];
 
-            if (findAirport(root, code, foundName, sizeof(foundName))) {
+            if (searchValue(root, code, foundName, sizeof(foundName))) {
                 printf("%s → %s\n", code, foundName);
             } else {
                 printf("Аэропорт с кодом '%s' не найден в базе.\n", code);

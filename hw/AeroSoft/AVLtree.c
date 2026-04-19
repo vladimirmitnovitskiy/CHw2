@@ -188,7 +188,7 @@ Node* deleteNode(Node* root, const char* code, bool* deleted)
     return root;
 }
 
-bool findAirport(Node* root, const char* code, char* outName, size_t maxLength)
+bool searchValue(Node* root, const char* code, char* outValue, size_t maxLength)
 {
     if (!root)
         return false;
@@ -196,15 +196,15 @@ bool findAirport(Node* root, const char* code, char* outName, size_t maxLength)
     int cmp = strcmp(code, root->code);
 
     if (cmp == 0) {
-        strncpy(outName, root->name, maxLength - 1);
-        outName[maxLength - 1] = '\0';
+        strncpy(outValue, root->name, maxLength - 1);
+        outValue[maxLength - 1] = '\0';
         return true;
     }
 
     if (cmp < 0)
-        return findAirport(root->left, code, outName, maxLength);
+        return searchValue(root->left, code, outValue, maxLength);
 
-    return findAirport(root->right, code, outName, maxLength);
+    return searchValue(root->right, code, outValue, maxLength);
 }
 
 void saveTreeToFile(Node* root, FILE* file, int* count)
