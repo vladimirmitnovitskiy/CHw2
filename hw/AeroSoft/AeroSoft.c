@@ -15,26 +15,13 @@ int main(int argc, char* argv[])
     }
 
     const char* filename = argv[1];
-    Node* root = NULL;
+
+    AVLtree* tree = createTree();
     int airportCount = 0;
 
     FILE* file = fopen(filename, "r");
     if (file) {
-        char line[MAX_LINE_LEN];
-        while (fgets(line, sizeof(line), file)) {
-            line[strcspn(line, "\n")] = 0;
-            line[strcspn(line, "\r")] = 0;
-
-            char* colon = strchr(line, ':');
-            if (colon) {
-                *colon = '\0';
-                bool added = false;
-                root = insertNode(root, line, colon + 1, &added);
-                if (added) {
-                    airportCount++;
-                }
-            }
-        }
+        loadTreeFromFile(tree, file, &airportCount);
         fclose(file);
         printf("Загружено %d аэропортов. Система готова к работе.\n", airportCount);
     } else {
@@ -59,7 +46,7 @@ int main(int argc, char* argv[])
             char* code = cmdLine + 5;
             char foundName[MAX_LINE_LEN];
 
-            if (searchValue(root, code, foundName, sizeof(foundName))) {
+            if (searchValue(tree, code, foundName, sizeof(foundName))) {
                 printf("%s → %s\n", code, foundName);
             } else {
                 printf("Аэропорт с кодом '%s' не найден в базе.\n", code);
@@ -72,7 +59,7 @@ int main(int argc, char* argv[])
             if (colon) {
                 *colon = '\0';
                 bool added = false;
-                root = insertNode(root, args, colon + 1, &added);
+                insertValue(tree, args, colon + 1, &added);
 
                 if (added) {
                     airportCount++;
@@ -87,7 +74,7 @@ int main(int argc, char* argv[])
         } else if (strncmp(cmdLine, "delete ", 7) == 0) {
             char* code = cmdLine + 7;
             bool deleted = false;
-            root = deleteNode(root, code, &deleted);
+            deleteValue(tree, code, &deleted);
 
             if (deleted) {
                 airportCount--;
@@ -100,7 +87,7 @@ int main(int argc, char* argv[])
             FILE* fileOut = fopen(filename, "w");
             if (fileOut) {
                 int savedCount = 0;
-                saveTreeToFile(root, fileOut, &savedCount);
+                saveTreeToFile(tree, fileOut, &savedCount);
                 fclose(fileOut);
                 printf("База сохранена: %d аэропортов.\n", savedCount);
             } else {
@@ -115,6 +102,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    freeTree(root);
+    freeTree(tree);
     return 0;
 }
