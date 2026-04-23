@@ -5,13 +5,18 @@
 
 #define MAX_CODE_LEN 16
 #define MAX_NAME_LEN 256
+#define MAX_LINE_LEN 512
 
-struct Node {
+typedef struct Node {
     char code[MAX_CODE_LEN];
     char name[MAX_NAME_LEN];
     int height;
-    Node* left;
-    Node* right;
+    struct Node* left;
+    struct Node* right;
+} Node;
+
+struct AVLtree {
+    Node* root;
 };
 
 static int max(int a, int b)
@@ -88,11 +93,40 @@ static Node* minValueNode(Node* node)
     return current;
 }
 
+static Node* balanceNode(Node* node)
+{
+    if (!node)
+        return node;
+
+    node->height = 1 + max(height(node->left), height(node->right));
+
+    int balance = getBalance(node);
+
+    if (balance > 1) {
+        if (getBalance(node->left) < 0) {
+            node->left = leftRotate(node->left);
+        }
+        return rightRotate(node);
+    }
+
+    if (balance < -1) {
+        if (getBalance(node->right) > 0) {
+            node->right = rightRotate(node->right);
+        }
+        return leftRotate(node);
+    }
+
+    return node;
+}
+
 Node* insertNode(Node* node, const char* code, const char* name, bool* added)
 {
     if (!node) {
-        *added = true;
-        return newNode(code, name);
+        Node* createNode = newNode(code, name);
+        if (createNode != NULL) {
+            *added = true;
+        }
+        return createNode;
     }
 
     int cmp = strcmp(code, node->code);
@@ -106,30 +140,10 @@ Node* insertNode(Node* node, const char* code, const char* name, bool* added)
         return node;
     }
 
-    node->height = 1 + max(height(node->left), height(node->right));
-
-    int balance = getBalance(node);
-
-    if (balance > 1 && strcmp(code, node->left->code) < 0)
-        return rightRotate(node);
-
-    if (balance < -1 && strcmp(code, node->right->code) > 0)
-        return leftRotate(node);
-
-    if (balance > 1 && strcmp(code, node->left->code) > 0) {
-        node->left = leftRotate(node->left);
-        return rightRotate(node);
-    }
-
-    if (balance < -1 && strcmp(code, node->right->code) < 0) {
-        node->right = rightRotate(node->right);
-        return leftRotate(node);
-    }
-
-    return node;
+    return balanceNode(node);
 }
 
-Node* deleteNode(Node* root, const char* code, bool* deleted)
+static Node* deleteNode(Node* root, const char* code, bool* deleted)
 {
     if (!root)
         return root;
@@ -166,29 +180,10 @@ Node* deleteNode(Node* root, const char* code, bool* deleted)
     if (!root)
         return root;
 
-    root->height = 1 + max(height(root->left), height(root->right));
-    int balance = getBalance(root);
-
-    if (balance > 1 && getBalance(root->left) >= 0)
-        return rightRotate(root);
-
-    if (balance > 1 && getBalance(root->left) < 0) {
-        root->left = leftRotate(root->left);
-        return rightRotate(root);
-    }
-
-    if (balance < -1 && getBalance(root->right) <= 0)
-        return leftRotate(root);
-
-    if (balance < -1 && getBalance(root->right) > 0) {
-        root->right = rightRotate(root->right);
-        return leftRotate(root);
-    }
-
-    return root;
+    return balanceNode(root);
 }
 
-bool searchValue(Node* root, const char* code, char* outValue, size_t maxLength)
+static bool searchValueInternal(Node* root, const char* code, char* outValue, size_t maxLength)
 {
     if (!root)
         return false;
@@ -202,26 +197,94 @@ bool searchValue(Node* root, const char* code, char* outValue, size_t maxLength)
     }
 
     if (cmp < 0)
-        return searchValue(root->left, code, outValue, maxLength);
+        return searchValueInternal(root->left, code, outValue, maxLength);
 
-    return searchValue(root->right, code, outValue, maxLength);
+    return searchValueInternal(root->right, code, outValue, maxLength);
 }
 
-void saveTreeToFile(Node* root, FILE* file, int* count)
+static void saveTreeToFileInternal(Node* root, FILE* file, int* count)
 {
     if (root) {
-        saveTreeToFile(root->left, file, count);
+        saveTreeToFileInternal(root->left, file, count);
         fprintf(file, "%s:%s\n", root->code, root->name);
         (*count)++;
-        saveTreeToFile(root->right, file, count);
+        saveTreeToFileInternal(root->right, file, count);
     }
 }
 
-void freeTree(Node* root)
+static void freeNode(Node* root)
 {
     if (root) {
-        freeTree(root->left);
-        freeTree(root->right);
+        freeNode(root->left);
+        freeNode(root->right);
         free(root);
+    }
+}
+
+AVLtree* createTree()
+{
+    AVLtree* tree = (AVLtree*)malloc(sizeof(AVLtree));
+    if (tree) {
+        tree->root = NULL;
+    }
+    return tree;
+}
+
+void insertValue(AVLtree* tree, const char* code, const char* name, bool* added)
+{
+    if (!tree) {
+        return;
+    }
+    tree->root = insertNode(tree->root, code, name, added);
+}
+
+void deleteValue(AVLtree* tree, const char* code, bool* deleted)
+{
+    if (!tree)
+        return;
+    tree->root = deleteNode(tree->root, code, deleted);
+}
+
+bool searchValue(AVLtree* tree, const char* code, char* outValue, size_t maxLength)
+{
+    if (!tree)
+        return false;
+    return searchValueInternal(tree->root, code, outValue, maxLength);
+}
+
+void saveTreeToFile(AVLtree* tree, FILE* file, int* count)
+{
+    if (!tree)
+        return;
+    saveTreeToFileInternal(tree->root, file, count);
+}
+
+void loadTreeFromFile(AVLtree* tree, FILE* file, int* count)
+{
+    if (!tree || !file)
+        return;
+
+    char line[MAX_LINE_LEN];
+    while (fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\r")] = 0;
+
+        char* colon = strchr(line, ':');
+        if (colon) {
+            *colon = '\0';
+            bool added = false;
+            insertValue(tree, line, colon + 1, &added);
+            if (added && count) {
+                (*count)++;
+            }
+        }
+    }
+}
+
+void freeTree(AVLtree* tree)
+{
+    if (tree) {
+        freeNode(tree->root);
+        free(tree);
     }
 }
